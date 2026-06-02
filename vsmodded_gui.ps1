@@ -10,14 +10,14 @@ $Depots = @(
     @{ AppId = 2887680; DepotId = 2887681; Manifest = 3514133824999244705; Name = "Guns 1.13" },
     @{ AppId = 3210350; DepotId = 3210351; Manifest = 8060350983363650803; Name = "OtC 1.13" },
     @{ AppId = 3451100; DepotId = 3451101; Manifest = 1117835708715944408; Name = "Emerald 1.13" },
-    @{ AppId = 1794680; DepotId = 1794681; Manifest = 7705709525695667015; Name = "Main Game 1.14" },
-    @{ AppId = 2230760; DepotId = 2230761; Manifest = 8169129825696276447; Name = "Moonspell 1.14" },
-    @{ AppId = 2313550; DepotId = 2313551; Manifest = 8683493039538160254; Name = "Foscari 1.14" },
-    @{ AppId = 2690330; DepotId = 2690331; Manifest = 7395124142414181956; Name = "Meeting 1.14" },
-    @{ AppId = 2887680; DepotId = 2887681; Manifest = 2142423368709490427; Name = "Guns 1.14" },
-    @{ AppId = 3210350; DepotId = 3210351; Manifest = 4006711137192460646; Name = "OtC 1.14" },
-    @{ AppId = 3451100; DepotId = 3451101; Manifest = 1560623702898905021; Name = "Emerald 1.14" },
-    @{ AppId = 3451100; DepotId = 3451101; Manifest = 8546054576269787507; Name = "Ante 1.14" }
+    @{ AppId = 1794680; DepotId = 1794681; Manifest = 5929929350734574725; Name = "Main Game 1.14" },
+    @{ AppId = 2230760; DepotId = 2230761; Manifest = 6626234685557471330; Name = "Moonspell 1.14" },
+    @{ AppId = 2313550; DepotId = 2313551; Manifest = 258978471953775490; Name = "Foscari 1.14" },
+    @{ AppId = 2690330; DepotId = 2690331; Manifest = 1027692196364748982; Name = "Meeting 1.14" },
+    @{ AppId = 2887680; DepotId = 2887681; Manifest = 3914729547287146862; Name = "Guns 1.14" },
+    @{ AppId = 3210350; DepotId = 3210351; Manifest = 1856258357613603873; Name = "OtC 1.14" },
+    @{ AppId = 3451100; DepotId = 3451101; Manifest = 7326781866595278644; Name = "Emerald 1.14" },
+    @{ AppId = 3451100; DepotId = 3929771; Manifest = 239795049570881193; Name = "Ante 1.14" }
 )
 $Depots113 = $Depots | Where-Object { $_.Name -match "1\.13" }
 $Depots114 = $Depots | Where-Object { $_.Name -match "1\.14" }
