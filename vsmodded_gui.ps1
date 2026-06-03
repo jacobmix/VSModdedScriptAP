@@ -17,7 +17,7 @@ $Depots = @(
     @{ AppId = 2887680; DepotId = 2887681; Manifest = 3914729547287146862; Name = "Guns 1.14" },
     @{ AppId = 3210350; DepotId = 3210351; Manifest = 1856258357613603873; Name = "OtC 1.14" },
     @{ AppId = 3451100; DepotId = 3451101; Manifest = 7326781866595278644; Name = "Emerald 1.14" },
-    @{ AppId = 3451100; DepotId = 3929771; Manifest = 239795049570881193; Name = "Ante 1.14" }
+    @{ AppId = 3929770; DepotId = 3929771; Manifest = 239795049570881193; Name = "Ante 1.14" }
 )
 $Depots113 = $Depots | Where-Object { $_.Name -match "1\.13" }
 $Depots114 = $Depots | Where-Object { $_.Name -match "1\.14" }
