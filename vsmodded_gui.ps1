@@ -1,15 +1,8 @@
 #Requires -Version 7.0
-# Cross-platform VSModded installer with GUI for Windows and Linux
+# Cross-platform Vampire Survivors AP installer with GUI for Windows and Linux
 
 # ===================== USER CONFIG =====================
 $Depots = @(
-    @{ AppId = 1794680; DepotId = 1794681; Manifest = 8734072661229265420; Name = "Main Game 1.13" },
-    @{ AppId = 2230760; DepotId = 2230761; Manifest = 8810650450200200831; Name = "Moonspell 1.13" },
-    @{ AppId = 2313550; DepotId = 2313551; Manifest = 6130364014836738278; Name = "Foscari 1.13" },
-    @{ AppId = 2690330; DepotId = 2690331; Manifest = 58333059023800463; Name = "Meeting 1.13" },
-    @{ AppId = 2887680; DepotId = 2887681; Manifest = 3514133824999244705; Name = "Guns 1.13" },
-    @{ AppId = 3210350; DepotId = 3210351; Manifest = 8060350983363650803; Name = "OtC 1.13" },
-    @{ AppId = 3451100; DepotId = 3451101; Manifest = 1117835708715944408; Name = "Emerald 1.13" },
     @{ AppId = 1794680; DepotId = 1794681; Manifest = 5929929350734574725; Name = "Main Game 1.14" },
     @{ AppId = 2230760; DepotId = 2230761; Manifest = 6626234685557471330; Name = "Moonspell 1.14" },
     @{ AppId = 2313550; DepotId = 2313551; Manifest = 258978471953775490; Name = "Foscari 1.14" },
@@ -19,8 +12,7 @@ $Depots = @(
     @{ AppId = 3451100; DepotId = 3451101; Manifest = 7326781866595278644; Name = "Emerald 1.14" },
     @{ AppId = 3929770; DepotId = 3929771; Manifest = 239795049570881193; Name = "Ante 1.14" }
 )
-$Depots113 = $Depots | Where-Object { $_.Name -match "1\.13" }
-$Depots114 = $Depots | Where-Object { $_.Name -match "1\.14" }
+$ActiveDepots = $Depots | Where-Object { $_.Name -match "1\.14" }
 # ======================================================
 
 $ErrorActionPreference = "Stop"
@@ -53,7 +45,7 @@ if ($OsTypeWindows) {
 function Show-Message {
     param (
         [string]$Message,
-        [string]$Title = "VSModded Installer",
+        [string]$Title = "Vampire Survivors AP Installer",
         [string]$Type = "Info" # Info, Warning, Error
     )
     
@@ -81,7 +73,7 @@ function Show-Message {
 function Show-Question {
     param (
         [string]$Message,
-        [string]$Title = "VSModded Installer"
+        [string]$Title = "Vampire Survivors AP Installer"
     )
     
     if ($UseGUI) {
@@ -106,7 +98,7 @@ function Show-Question {
 function Get-UserInput {
     param (
         [string]$Prompt,
-        [string]$Title = "VSModded Installer",
+        [string]$Title = "Vampire Survivors AP Installer",
         [string]$Default = ""
     )
     
@@ -212,9 +204,9 @@ function Show-ListSelection {
             $listBox.Size = New-Object System.Drawing.Size(460, 280)
             $listBox.CheckOnClick = $true
             
-            foreach ($item in $Items) {
-                [void]$listBox.Items.Add($item)
-            }
+			foreach ($item in $Items) {
+				[void]$listBox.Items.Add($item, $true)
+			}
             
             $form.Controls.Add($listBox)
             
@@ -247,7 +239,7 @@ function Show-ListSelection {
             # Zenity list with checkboxes
             $zenityItems = @()
             for ($i = 0; $i -lt $Items.Count; $i++) {
-                $zenityItems += "FALSE"
+                $zenityItems += "TRUE"
                 $zenityItems += "$($i + 1)"
                 $zenityItems += $Items[$i]
             }
@@ -258,9 +250,9 @@ function Show-ListSelection {
                 @zenityItems 2>$null
             
             if ($LASTEXITCODE -eq 0 -and $result) {
-                $selected = $result -split '\|' | ForEach-Object {
-                    $Items.IndexOf($_)
-                }
+				$result -split '\|' | ForEach-Object {
+					[int]$_ - 1
+				}
                 return $selected
             }
             return $null
@@ -445,7 +437,7 @@ Categories=Game;
 
 # ===================== MAIN INSTALLATION =====================
 
-Show-Message "Welcome to VSModded Installer!`n`nThis will download and install modded versions of Vampire Survivors." "Welcome"
+Show-Message "Welcome to Vampire Survivors AP Installer!`n`nThis will download and install Archipelago version of Vampire Survivors." "Welcome"
 
 # ===================== PATHS =====================
 if ($OsTypeWindows) {
@@ -513,8 +505,15 @@ if (-not $SteamLib) {
     }
 }
 
-$SteamCommon = Join-Path $SteamLib "steamapps/common"
-$VSModded = Join-Path $SteamCommon "VSModded"
+#$VSAPPath = "C:\ProgramData\Archipelago\Vampire Survivors AP"
+$ArchipelagoRoot = "C:\ProgramData\Archipelago"
+
+if (Test-Path $ArchipelagoRoot) {
+    $VSAPPath = Join-Path $ArchipelagoRoot "Vampire Survivors AP"
+} else {
+    $SteamCommon = Join-Path $SteamLib "steamapps/common"
+    $VSAPPath = Join-Path $SteamCommon "Vampire Survivors AP"
+}
 
 # ===================== AUTO-DETECT STEAM USER =====================
 $LoginUsersVdf = Join-Path $SteamPath "config/loginusers.vdf"
@@ -562,101 +561,39 @@ if (-not $DepotDownloaderExe) {
     }
 }
 
-# ===================== CREATE VSMODDED =====================
-if (-not (Test-Path $VSModded)) {
-    New-Item -ItemType Directory -Force -Path $VSModded | Out-Null
-}
-
-# ===================== VERSION SELECTION =====================
-if ($UseGUI -and $OsTypeWindows) {
-    $form = New-Object System.Windows.Forms.Form
-    $form.Text = "Choose Game Version"
-    $form.Size = New-Object System.Drawing.Size(300, 180)
-    $form.StartPosition = 'CenterScreen'
-    $form.FormBorderStyle = 'FixedDialog'
-    $form.MaximizeBox = $false
-    
-    $label = New-Object System.Windows.Forms.Label
-    $label.Location = New-Object System.Drawing.Point(10, 20)
-    $label.Size = New-Object System.Drawing.Size(260, 20)
-    $label.Text = "Select game version:"
-    $form.Controls.Add($label)
-    
-    $radioButton113 = New-Object System.Windows.Forms.RadioButton
-    $radioButton113.Location = New-Object System.Drawing.Point(30, 50)
-    $radioButton113.Size = New-Object System.Drawing.Size(240, 20)
-    $radioButton113.Checked = $true
-    $radioButton113.Text = "Version 1.13"
-    $form.Controls.Add($radioButton113)
-    
-    $radioButton114 = New-Object System.Windows.Forms.RadioButton
-    $radioButton114.Location = New-Object System.Drawing.Point(30, 80)
-    $radioButton114.Size = New-Object System.Drawing.Size(240, 20)
-    $radioButton114.Text = "Version 1.14"
-    $form.Controls.Add($radioButton114)
-    
-    $okButton = New-Object System.Windows.Forms.Button
-    $okButton.Location = New-Object System.Drawing.Point(115, 110)
-    $okButton.Size = New-Object System.Drawing.Size(75, 23)
-    $okButton.Text = 'OK'
-    $okButton.DialogResult = [System.Windows.Forms.DialogResult]::OK
-    $form.AcceptButton = $okButton
-    $form.Controls.Add($okButton)
-    
-    $result = $form.ShowDialog()
-    
-    if ($result -ne [System.Windows.Forms.DialogResult]::OK) {
-        exit
-    }
-    
-    $ActiveDepots = if ($radioButton113.Checked) { $Depots113 } else { $Depots114 }
-} elseif ($UseGUI -and $OsTypeLinux) {
-    $result = zenity --list --radiolist --title="Choose Game Version" --text="Select game version:" `
-        --column="" --column="Version" --column="Description" `
-        TRUE "1.13" "Version 1.13" `
-        FALSE "1.14" "Version 1.14" `
-        --hide-column=2 --width=400 --height=250 2>$null
-    
-    if ($LASTEXITCODE -ne 0) {
-        exit
-    }
-    
-    $ActiveDepots = if ($result -match "1.13") { $Depots113 } else { $Depots114 }
-} else {
-    Write-Host "1. Version 1.13"
-    Write-Host "2. Version 1.14"
-    [int]$versionChoice = Read-Host "Select version"
-    $ActiveDepots = if ($versionChoice -eq 1) { $Depots113 } else { $Depots114 }
+# ===================== CREATE Vampire Survivors AP =====================
+if (-not (Test-Path $VSAPPath)) {
+    New-Item -ItemType Directory -Force -Path $VSAPPath | Out-Null
 }
 
 # ===================== INSTALL MODE =====================
-$installMode = if ($UseGUI) {
-    Show-Question "Install all components?`n`nYes = Full install (Game + all DLCs)`nNo = Select individual components" "Install Mode"
-} else {
-    $choice = Read-Host "Full install (1) or select components (2)?"
-    $choice -eq "1"
-}
+# Main game is always required
+$MainDepot = $ActiveDepots | Where-Object { $_.AppId -eq 1794680 }
 
-if ($installMode) {
-    $DepotsToDownload = $ActiveDepots
-} else {
-    $componentNames = $ActiveDepots | ForEach-Object { $_.Name }
-    $selected = Show-ListSelection "Select Components" "Choose components to install:" $componentNames $true
-    
-    if (-not $selected) {
-        Show-Message "No components selected. Installation cancelled." "Cancelled" "Warning"
-        exit
-    }
-    
-    $DepotsToDownload = foreach ($i in $selected) {
-        $ActiveDepots[$i]
+# Optional DLCs
+$DlcDepots = $ActiveDepots | Where-Object { $_.AppId -ne 1794680 }
+
+$DepotsToDownload = @($MainDepot)
+
+if ($DlcDepots.Count -gt 0) {
+    $selectedIndexes = Show-ListSelection `
+        -Title "DLC Selection" `
+        -Message "Select DLCs to download (optional):" `
+        -Items ($DlcDepots | ForEach-Object { $_.Name })
+
+    if ($selectedIndexes) {
+        foreach ($index in $selectedIndexes) {
+            if ($index -ge 0 -and $index -lt $DlcDepots.Count) {
+                $DepotsToDownload += $DlcDepots[$index]
+            }
+        }
     }
 }
 
 # ===================== MELONLOADER CHECK =====================
 $wantMelon = $true
 
-if (Test-Path (Join-Path $VSModded "MelonLoader")) {
+if (Test-Path (Join-Path $VSAPPath "MelonLoader")) {
     $wantMelon = Show-Question "MelonLoader already exists.`n`nRedownload MelonLoader?" "MelonLoader"
 }
 
@@ -667,7 +604,8 @@ foreach ($depot in $DepotsToDownload) {
     $CurrentDepotDir = Join-Path $DepotDir $depot.DepotId
     New-Item -ItemType Directory -Force -Path $CurrentDepotDir | Out-Null
 
-    Show-Message "Downloading $($depot.Name)..." "Download"
+    # Show-Message "Downloading $($depot.Name)..." "Download"
+	Write-Host "Downloading: $($depot.Name)..."
 
     $ddArgs = @(
         "-app", $depot.AppId,
@@ -686,54 +624,119 @@ foreach ($depot in $DepotsToDownload) {
 
     Get-ChildItem $CurrentDepotDir -Force |
         Where-Object { $_.Name -ne ".DepotDownloader" } |
-        Copy-Item -Destination $VSModded -Recurse -Force
+        Copy-Item -Destination $VSAPPath -Recurse -Force
 }
 
 # ===================== DOWNLOAD MELONLOADER =====================
 if ($wantMelon) {
-    Ensure-MelonLoader -TargetDir $VSModded -Force:$wantMelon
+    Ensure-MelonLoader -TargetDir $VSAPPath -Force:$wantMelon
 }
 
-# ===================== DOWNLOAD ICON =====================
-$IconUrl = "https://github.com/takacomic/VSModdedScript/raw/main/VSModded.ico"
-$IconPath = Join-Path $VSModded "VSModded.ico"
+$ModsDir = Join-Path $VSAPPath "Mods"
+$userLibsDest = Join-Path $VSAPPath "UserLibs"
 
-Invoke-WebRequest $IconUrl -OutFile $IconPath
+New-Item -ItemType Directory -Path $ModsDir -Force | Out-Null
+New-Item -ItemType Directory -Path $userLibsDest -Force | Out-Null
+
+# ===================== DOWNLOAD ICON =====================
+#$IconUrl = "https://github.com/takacomic/Vampire Survivors APScript/raw/main/Vampire Survivors AP.ico"
+#$IconPath = Join-Path $VSAPPath "Vampire Survivors AP.ico"
+
+#Invoke-WebRequest $IconUrl -OutFile $IconPath
 
 # ===================== DOWNLOAD COFFINTECH MOD =====================
 Show-Message "Downloading latest CoffinTech mod..." "Mods"
 
-$ModsDir = Join-Path $VSModded "Mods"
-New-Item -ItemType Directory -Force -Path $ModsDir | Out-Null
-
 try {
-    # Get latest release info from GitHub API
-    $CoffinTechRelease = Invoke-RestMethod "https://api.github.com/repos/takacomic/CoffinTech/releases/latest"
-    
-    # Find the CoffinTech.dll asset
-    $CoffinTechAsset = $CoffinTechRelease.assets | Where-Object { $_.name -eq "CoffinTech.dll" } | Select-Object -First 1
-    
+    $Headers = @{
+        "Accept" = "application/vnd.github+json"
+        "User-Agent" = "VS-Mod-Installer"
+    }
+
+    $CoffinTechRelease = Invoke-RestMethod `
+        -Uri "https://api.github.com/repos/takacomic/CoffinTech/releases/latest" `
+        -Headers $Headers `
+        -ErrorAction Stop
+
+    $CoffinTechAsset = $CoffinTechRelease.assets |
+        Where-Object { $_.name -eq "CoffinTech.dll" } |
+        Select-Object -First 1
+
     if ($CoffinTechAsset) {
         $CoffinTechPath = Join-Path $ModsDir "CoffinTech.dll"
-        Invoke-WebRequest $CoffinTechAsset.browser_download_url -OutFile $CoffinTechPath
+
+        Invoke-WebRequest `
+            -Uri $CoffinTechAsset.browser_download_url `
+            -OutFile $CoffinTechPath `
+            -ErrorAction Stop
+
         Show-Message "CoffinTech mod installed successfully!`nVersion: $($CoffinTechRelease.tag_name)" "Mods"
-    } else {
+    }
+    else {
         Show-Message "CoffinTech.dll not found in latest release. Skipping mod installation." "Warning" "Warning"
     }
-} catch {
+}
+catch {
     Show-Message "Failed to download CoffinTech mod: $($_.Exception.Message)`n`nYou can manually download it from:`nhttps://github.com/takacomic/CoffinTech/releases" "Warning" "Warning"
 }
 
-# ===================== CREATE SHORTCUTS =====================
-$exeName = if ($OsTypeWindows) { "VampireSurvivors.exe" } else { "VampireSurvivors.exe" }
-$exePath = Join-Path $VSModded $exeName
+# ===================== DOWNLOAD ARCHIPELAGO MOD =====================
+Show-Message "Downloading ArchipelagoSurvivors..." "Mods"
 
-Create-DesktopShortcut -ShortcutName "VSModded" -TargetPath $exePath -WorkingDirectory $VSModded -IconPath $IconPath
-Create-DesktopShortcut -ShortcutName "VSModded (Folder)" -TargetPath $VSModded -WorkingDirectory $VSModded
+$APZip = Join-Path $ToolDir "ArchipelagoSurvivors.zip"
+
+Invoke-WebRequest `
+    "https://github.com/SWCreeperKing/ArchipelagoSurvivors/releases/latest/download/ArchipelagoSurvivors.zip" `
+    -OutFile $APZip
+
+$APExtract = Join-Path $ToolDir "ArchipelagoSurvivors"
+
+if (Test-Path $APExtract) {
+    Remove-Item $APExtract -Recurse -Force
+}
+
+Expand-Archive $APZip $APExtract -Force
+
+$APRoot = Join-Path $APExtract "ArchipelagoSurvivors"
+
+if (-not (Test-Path $APRoot)) {
+    throw "Expected ArchipelagoSurvivors folder not found in archive."
+}
+
+Copy-Item `
+    (Join-Path $APRoot "Mods\*") `
+    $ModsDir `
+    -Recurse -Force
+
+Copy-Item `
+    (Join-Path $APRoot "UserLibs\*") `
+    $userLibsDest `
+    -Recurse -Force
+
+Show-Message "ArchipelagoSurvivors installed successfully!" "Mods"
+
+# ===================== CREATE SHORTCUTS =====================
+if ($OsTypeWindows -and (Show-Question "Create a desktop shortcut for Vampire Survivors AP?" "Shortcut")) {
+	$exeName = if ($OsTypeWindows) { "VampireSurvivors.exe" } else { "VampireSurvivors.exe" }
+	$exePath = Join-Path $VSAPPath $exeName
+
+    Create-DesktopShortcut `
+        -ShortcutName "Vampire Survivors AP" `
+        -TargetPath $exePath `
+        -WorkingDirectory $VSAPPath
+
+    Write-Host "Desktop shortcut created."
+}
+else {
+    Write-Host "Skipping shortcut creation."
+}
+
+# Create-DesktopShortcut -ShortcutName "Vampire Survivors AP" -TargetPath $exePath -WorkingDirectory $VSAPPath -IconPath $IconPath
+# Create-DesktopShortcut -ShortcutName "Vampire Survivors AP (Folder)" -TargetPath $VSAPPath -WorkingDirectory $VSAPPath
 
 # ===================== LINUX PROTON NOTES =====================
 if ($OsTypeLinux) {
-    Show-Message "To run VSModded with Proton:`n`n1. Add VSModded as a Non-Steam game in Steam`n2. Right-click > Properties > Compatibility`n3. Enable 'Force the use of a specific Steam Play compatibility tool'`n4. Select a Proton version (Proton Experimental recommended)`n`nGame location: $VSModded" "Linux Setup" "Info"
+    Show-Message "To run Vampire Survivors AP with Proton:`n`n1. Add Vampire Survivors AP as a Non-Steam game in Steam`n2. Right-click > Properties > Compatibility`n3. Enable 'Force the use of a specific Steam Play compatibility tool'`n4. Select a Proton version (Proton Experimental recommended)`n`nGame location: $VSAPPath" "Linux Setup" "Info"
 }
 
 # ===================== CLEANUP =====================
@@ -741,12 +744,19 @@ try {
     if (Test-Path $DepotZip) {
         Remove-Item $DepotZip -Force
     }
+
     if (Test-Path $DepotExtract) {
         Remove-Item $DepotExtract -Recurse -Force
     }
+
     $MelonZip = Join-Path $ToolDir "MelonLoader.zip"
     if (Test-Path $MelonZip) {
         Remove-Item $MelonZip -Force
+    }
+
+    # Remove downloaded depot contents
+    if (Test-Path $DepotDir) {
+        Remove-Item $DepotDir -Recurse -Force
     }
 }
 catch {
@@ -754,4 +764,4 @@ catch {
 }
 
 # ===================== DONE =====================
-Show-Message "VSModded setup complete!`n`nInstallation directory:`n$VSModded`n`nDesktop shortcuts have been created." "Success" "Info"
+Show-Message "Vampire Survivors AP setup complete!`n`nInstallation directory:`n$VSAPPath" "Success" "Info"
