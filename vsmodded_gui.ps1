@@ -600,6 +600,28 @@ if (Test-Path (Join-Path $VSAPPath "MelonLoader")) {
 # ===================== DOWNLOAD SELECTED DEPOTS =====================
 Show-Message "Starting depot downloads.`n`nYou may be prompted for Steam Guard authentication." "Download"
 
+Write-Host "DepotDownloader version, and Vampire Survivors manifest check"
+#Show SteamRE DepotDownloader version, and check login with simple Vampire Survivors app id.
+if ($DepotDownloaderExe.Extension -eq ".dll") {
+    & dotnet $DepotDownloaderExe.FullName --version
+
+    & dotnet $DepotDownloaderExe.FullName `
+        -app 1794680 `
+        -username $SteamUser `
+        -remember-password `
+		-manifest-only
+}
+else {
+    & $DepotDownloaderExe.FullName --version
+
+    & $DepotDownloaderExe.FullName `
+        -app 1794680 `
+        -username $SteamUser `
+        -remember-password `
+		-manifest-only
+}
+
+Write-Host "Proper downloads starting now..."
 foreach ($depot in $DepotsToDownload) {
     $CurrentDepotDir = Join-Path $DepotDir $depot.DepotId
     New-Item -ItemType Directory -Force -Path $CurrentDepotDir | Out-Null
@@ -612,7 +634,8 @@ foreach ($depot in $DepotsToDownload) {
         "-depot", $depot.DepotId,
         "-manifest", $depot.Manifest,
         "-username", $SteamUser,
-        "-remember-password",
+		"-remember-password"
+		"-validate"
         "-dir", $CurrentDepotDir
     )
 
@@ -758,10 +781,15 @@ try {
     if (Test-Path $DepotDir) {
         Remove-Item $DepotDir -Recurse -Force
     }
+    # Remove Tools contents
+    if (Test-Path $ToolDir) {
+        Remove-Item $ToolDir -Recurse -Force
+    }
 }
 catch {
     # Silent cleanup failure
 }
 
 # ===================== DONE =====================
+Write-Host "Installation directory: $VSAPPath"
 Show-Message "Vampire Survivors AP setup complete!`n`nInstallation directory:`n$VSAPPath" "Success" "Info"
