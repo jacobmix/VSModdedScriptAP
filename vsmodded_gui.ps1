@@ -677,7 +677,8 @@ try {
     }
 
     $CoffinTechRelease = Invoke-RestMethod `
-        -Uri "https://api.github.com/repos/takacomic/CoffinTech/releases/latest" `
+        -Uri "https://api.github.com/repos/takacomic/CoffinTech/releases/tags/v1.2.3" `
+#        -Uri "https://api.github.com/repos/takacomic/CoffinTech/releases/latest" `
         -Headers $Headers `
         -ErrorAction Stop
 
