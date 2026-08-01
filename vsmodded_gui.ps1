@@ -378,9 +378,10 @@ function Ensure-MelonLoader {
         return
     }
 
-    Show-Message "Downloading MelonLoader alpha-development nightly..." "MelonLoader"
+    Show-Message "Downloading MelonLoader..." "MelonLoader"
 
-    $MelonLoaderUrl = "https://nightly.link/LavaGang/MelonLoader/workflows/build/alpha-development/MelonLoader.Windows.x64.CI.Release.zip"
+    # $MelonLoaderUrl = "https://nightly.link/LavaGang/MelonLoader/workflows/build/alpha-development/MelonLoader.Windows.x64.CI.Release.zip"
+    $MelonLoaderUrl = "https://github.com/LavaGang/MelonLoader/releases/download/v0.7.3/MelonLoader.x64.zip"
     $MelonZip = Join-Path $ToolDir "MelonLoader.zip"
 
     Invoke-WebRequest $MelonLoaderUrl -OutFile $MelonZip
@@ -676,9 +677,9 @@ try {
         "User-Agent" = "VS-Mod-Installer"
     }
 
+        # -Uri "https://api.github.com/repos/takacomic/CoffinTech/releases/latest" `
     $CoffinTechRelease = Invoke-RestMethod `
         -Uri "https://api.github.com/repos/takacomic/CoffinTech/releases/tags/v1.2.3" `
-#        -Uri "https://api.github.com/repos/takacomic/CoffinTech/releases/latest" `
         -Headers $Headers `
         -ErrorAction Stop
 
